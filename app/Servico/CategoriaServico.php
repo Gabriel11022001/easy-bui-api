@@ -111,9 +111,98 @@ class CategoriaServico implements IServiceCategoria
 
     public function buscarTodasCategoriasEmpresa($idEmpresa) {
         
+        try {
+
+            if (empty($idEmpresa)) {
+
+                return Resposta::resposta('Informe o id da empresa!', null, 200, false);
+            }
+
+            $empresa = Empresa::find($idEmpresa);
+
+            if (!$empresa) {
+
+                return Resposta::resposta('Não existe uma empresa cadastrada com esse id!', null, 200, false);
+            }
+
+            $categoriasEmpresa = $empresa->categorias()
+                ->where('status', true)
+                ->get();
+
+            if (count($categoriasEmpresa) === 0) {
+
+                return Resposta::resposta('A empresa não possui categorias!', [], 200, false);
+            }
+            
+            return Resposta::resposta('Categorias encontradas com sucesso!', $categoriasEmpresa, 200, true);
+        } catch (Exception $e) {
+
+            return Resposta::resposta(
+                'Ocorreu um erro ao tentar-se buscar as categorias da empresa!' . $e->getMessage(),
+                null,
+                200,
+                false
+            );
+        }
+
     }
 
-    public function alterarStatusCategoria($idCategoria) {
+    public function alterarStatusCategoria(Request $requisicao) {
         
+        try {
+            $validador = Validator::make($requisicao->all(), [
+                'categoria_id' => 'required|numeric|min:1'
+            ],
+            [
+                'categoria_id.required' => 'Informe o id da categoria',
+                'categoria_id.numeric' => 'O id da categoria deve ser um valor numérico!',
+                'categoria_id.min' => 'O id da categoria deve ser maior ou igual a 1!'
+            ]);
+
+            if ($validador->fails()) {
+
+                return Resposta::resposta(
+                    'Ocorreram erros de validação de dados!',
+                    $validador->errors(),
+                    200,
+                    false
+                );
+            }
+
+            $categoria = Categoria::find($requisicao->categoria_id);
+
+            if (!$categoria) {
+
+                return Resposta::resposta(
+                    'Não existe uma categoria cadastrada com esse id!',
+                    null,
+                    200,
+                    false
+                );
+            }
+
+            $categoria->status = !$categoria->status;
+
+            if (!$categoria->save()) {
+
+                return Resposta::resposta(
+                    'Ocorreu um erro ao tentar-se alterar o status da categoria!',
+                    null,
+                    200,
+                    false
+                );
+            }
+
+            return Resposta::resposta(
+                'O status da categoria foi alterado com sucesso!',
+                $categoria,
+                200,
+                true
+            );
+        } catch (Exception $e) {
+
+            return Resposta::resposta('Ocorreu um erro ao tentar-se alterar o status da categoria!', null, 200, false);
+        }
+
     }
 }

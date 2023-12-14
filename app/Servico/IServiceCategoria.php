@@ -9,7 +9,7 @@ interface IServiceCategoria extends IService
 
     function buscarTodasCategoriasEmpresa($idEmpresa);
 
-    function alterarStatusCategoria($idCategoria);
+    function alterarStatusCategoria(Request $requisicao);
 
     function editarCategoria(Request $requisicao);
 }

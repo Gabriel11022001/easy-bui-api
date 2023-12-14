@@ -7,4 +7,6 @@ use Illuminate\Support\Facades\Route;
 Route::post('/empresa', [ EmpresaController::class, 'cadastrarEmpresa' ]);
 Route::post('/empresa/buscar-pelo-cnpj', [ EmpresaController::class, 'buscarEmpresaPeloCnpj' ]);
 Route::post('/categoria', [ CategoriaController::class, 'cadastrarCategoria' ]);
+Route::put('/categoria/alterar-status', [ CategoriaController::class, 'alterarStatusCategoria' ]);
 Route::get('/categoria/{id}', [ CategoriaController::class, 'buscarCategoriaPeloId' ]);
+Route::get('/categoria/empresa/{idEmpresa}', [ CategoriaController::class, 'buscarTodasCategoriasEmpresa' ]);

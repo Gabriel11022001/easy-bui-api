@@ -21,11 +21,11 @@ class Empresa extends Model
 
     public function usuarios() {
 
-        return $this->belongsToMany(Usuario::class);
+        return $this->hasMany(Usuario::class);
     }
 
     public function categorias() {
 
-        return $this->belongsToMany(Categoria::class);
+        return $this->hasMany(Categoria::class);
     }
 }

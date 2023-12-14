@@ -22,4 +22,14 @@ class CategoriaController extends Controller
 
         return $this->categoriaServico->buscarPeloId($id);
     }
+
+    public function buscarTodasCategoriasEmpresa($idEmpresa) {
+
+        return $this->categoriaServico->buscarTodasCategoriasEmpresa($idEmpresa);
+    }
+
+    public function alterarStatusCategoria(Request $requisicao) {
+
+        return $this->categoriaServico->alterarStatusCategoria($requisicao);
+    }
 }
