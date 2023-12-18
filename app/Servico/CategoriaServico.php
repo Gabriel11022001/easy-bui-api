@@ -126,7 +126,6 @@ class CategoriaServico implements IServiceCategoria
             }
 
             $categoriasEmpresa = $empresa->categorias()
-                ->where('status', true)
                 ->get();
 
             if (count($categoriasEmpresa) === 0) {
