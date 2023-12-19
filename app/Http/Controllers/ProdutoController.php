@@ -22,4 +22,24 @@ class ProdutoController extends Controller
 
         return $this->produtoServico->buscarTodosProdutosEmpresa($idEmpresa);
     }
+
+    public function buscarProdutoPeloId($id) {
+
+        return $this->produtoServico->buscarPeloId($id);
+    }
+
+    public function buscarProdutosAbaixoEstoqueMinimo($idEmpresa) {
+
+        return $this->produtoServico->buscarProdutosAbaixoEstoqueMinimo($idEmpresa);
+    }
+
+    public function buscarProdutosPelaCategoria($idCategoria, $idEmpresa) {
+
+        return $this->produtoServico->buscarProdutosPelaCategoria($idCategoria, $idEmpresa);
+    }
+
+    public function buscarProdutosPelaDescricao(Request $requisicao) {
+
+        return $this->produtoServico->buscarProdutosPelaDescricao($requisicao);
+    }
 }

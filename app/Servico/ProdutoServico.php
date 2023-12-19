@@ -187,10 +187,103 @@ class ProdutoServico implements IServiceProduto
 
     public function buscarPeloId($id) {
         
+        try {
+
+            if (empty($id)) {
+
+                return Resposta::resposta(
+                    'Informe o id do produto!',
+                    null,
+                    200,
+                    false
+                );
+            }
+
+            $produto = Produto::find($id);
+
+            if (!$produto) {
+
+                return Resposta::resposta('Não existe um produto cadastrado no banco de dados com esse id!', null, 200, false);
+            }
+
+            $categoriaProduto = $produto->categoria()->get();
+            $produto['categoria'] = $categoriaProduto;
+
+            return Resposta::resposta(
+                'Produto encontrado com sucesso!',
+                $produto,
+                200,
+                true
+            );
+        } catch (Exception $e) {
+
+            return Resposta::resposta(
+                'Ocorreu um erro ao tentar-se buscar o produto pelo id!' . $e->getMessage(),
+                null,
+                200,
+                false
+            );
+        }
+
     }
 
     public function buscarProdutosAbaixoEstoqueMinimo($idEmpresa) {
         
+        try {
+
+            if (empty($idEmpresa)) {
+
+                return Resposta::resposta('Informe o id da empresa!', null, 200, false);
+            }
+
+            $produtos = $this->obterProdutosAbaixoEstoqueMinimoEmpresa($idEmpresa);
+
+            if (count($produtos) > 0) {
+
+                return Resposta::resposta(
+                    'Produtos abaixo do estoque mínimo encontrados com sucesso!',
+                    $produtos,
+                    200,
+                    true
+                );
+            }
+
+            return Resposta::resposta(
+                'Não existem produtos abaixo do estoque mínimo!',
+                [],
+                200,
+                true
+            );
+        } catch (Exception $e) {
+
+            return Resposta::resposta(
+                'Ocorreu um erro ao tentar-se buscar os produtos abaixo do estoque mínimo!' . $e->getMessage(),
+                null,
+                200,
+                false
+            );
+        }
+
+    }
+
+    private function obterProdutosAbaixoEstoqueMinimoEmpresa($idEmpresa) {
+        $colunas = [
+            'produtos.id',
+            'produtos.descricao AS descricao_produto',
+            'produtos.status',
+            'produtos.preco',
+            'produtos.qtd_unidades_estoque',
+            'produtos.estoque_minimo',
+            'categorias.descricao AS categoria'
+        ];
+
+        return DB::table('produtos')
+            ->join('categorias', 'categorias.id', '=', 'produtos.categoria_id')
+            ->select($colunas)
+            ->where('produtos.empresa_id', $idEmpresa)
+            ->where('produtos.qtd_unidades_estoque', '<', 'produtos.estoque_minimo')
+            ->whereNotNull('produtos.estoque_minimo')
+            ->get();
     }
 
     public function buscarProdutosAtivosEmpresa($idEmpresa) {
@@ -203,10 +296,120 @@ class ProdutoServico implements IServiceProduto
 
     public function buscarProdutosPelaCategoria($idCategoria, $idEmpresa) {
         
+        try {
+
+            if (empty($idEmpresa)) {
+
+                return Resposta::resposta('Informe o id da empresa!', null, 200, false);
+            }
+            
+            if (empty($idCategoria)) {
+
+                return Resposta::resposta('Informe o id da categoria!', null, 200, false);
+            }
+
+            $empresa = Empresa::find($idEmpresa);
+
+            if (!$empresa) {
+
+                return Resposta::resposta('Não existe uma empresa cadastrada com o id informado!', null, 200, false);
+            }
+
+            $categoria = Categoria::where('id', $idCategoria)
+                ->where('empresa_id', $idEmpresa)
+                ->get();
+
+            if (!$categoria) {
+
+                return Resposta::resposta('Não existe uma categoria cadastrada para a sua empresa com o id informado!', null, 200, false);
+            }
+
+            $produtos = DB::table('produtos')
+                ->join('categorias', 'produtos.categoria_id', '=', 'categorias.id')
+                ->select(
+                    'produtos.id',
+                    'produtos.descricao AS produto',
+                    'produtos.preco',
+                    'produtos.qtd_unidades_estoque',
+                    'produtos.status',
+                    'categorias.descricao AS categoria'
+                )
+                ->where('produtos.categoria_id', $idCategoria)
+                ->get();
+            
+            return count($produtos) > 0 ? Resposta::resposta(
+                'Produtos encontrados com sucesso!',
+                $produtos,
+                200,
+                true
+            ) : Resposta::resposta(
+                'Não existem produtos cadastrados no banco de dados!',
+                [],
+                200,
+                true
+            );
+        } catch (Exception $e) {
+
+            return Resposta::resposta('Ocorreu um erro ao tentar-se buscar os produtos pela categoria!', null, 200, false);
+        }
+
     }
 
     public function buscarProdutosPelaDescricao(Request $requisicao) {
         
+        try {
+            $validador = Validator::make($requisicao->all(),
+            [
+                'empresa_id' => 'required|numeric|min:1'
+            ],
+            [
+                'empresa_id.required' => 'Informe o id da empresa!',
+                'empresa_id.numeric' => 'O id da empresa deve ser um valor numérico!',
+                'empresa_id.min' => 'O id da empresa não deve ser menor que 1!'
+            ]);
+
+            if ($validador->fails()) {
+
+                return Resposta::resposta(
+                    'Ocorreram os seguintes erros de validação de dados!',
+                    $validador->errors(),
+                    200,
+                    false
+                );
+            }
+
+            $descricao = $requisicao->descricao;
+            $descricao = mb_strtoupper($descricao);
+            $produtos = DB::table('produtos')
+                ->join('categorias', 'produtos.categoria_id', '=', 'categorias.id')
+                ->select(
+                    'produtos.id',
+                    'produtos.descricao AS produto',
+                    'produtos.preco',
+                    'produtos.qtd_unidades_estoque',
+                    'produtos.status',
+                    'categorias.descricao AS categoria'
+                )
+                ->where('produtos.descricao', 'like', '%' . $descricao . '%')
+                ->where('produtos.empresa_id', $requisicao->empresa_id)
+                ->get();
+            
+            return Resposta::resposta(
+                'Foram encontrados os seguintes dados!',
+                $produtos,
+                200,
+                true
+            );
+        } catch (Exception $e) {
+
+            return Resposta::resposta(
+                'Ocorreu um erro ao tentar-se buscar os produtos pela descrição!',
+                null,
+                200,
+                false
+            );
+        }
+
     }
 
     public function buscarTodosProdutosEmpresa($idEmpresa) {

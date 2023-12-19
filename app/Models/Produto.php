@@ -27,11 +27,11 @@ class Produto extends Model
 
     public function categoria() {
 
-        return $this->hasOne(Categoria::class);
+        return $this->belongsTo(Categoria::class);
     }
 
     public function empresa() {
 
-        return $this->hasOne(Empresa::class);
+        return $this->belongsTo(Empresa::class);
     }
 }
