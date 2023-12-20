@@ -12,4 +12,6 @@ interface IServiceCategoria extends IService
     function alterarStatusCategoria(Request $requisicao);
 
     function editarCategoria(Request $requisicao);
+
+    function buscarCategoriasAtivas($idEmpresa);
 }

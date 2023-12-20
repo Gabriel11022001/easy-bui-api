@@ -204,4 +204,60 @@ class CategoriaServico implements IServiceCategoria
         }
 
     }
+
+    public function buscarCategoriasAtivas($idEmpresa) {
+        
+        try {
+
+            if (empty($idEmpresa)) {
+
+                return Resposta::resposta(
+                    'Informe o id da empresa!',
+                    null,
+                    200,
+                    false
+                );
+            }
+
+            $empresa = Empresa::find($idEmpresa);
+
+            if (!$empresa) {
+
+                return Resposta::resposta(
+                    'Não existe uma empresa cadastrada com o id informado!',
+                    null,
+                    200,
+                    false
+                );
+            }
+
+            $categorias = $empresa->categorias()->where('status', true)->get();
+
+            if (count($categorias) === 0) {
+
+                return Resposta::resposta(
+                    'Não existem categorias ativas para a empresa cadastradas no banco de dados!',
+                    [],
+                    200,
+                    false
+                );
+            }
+
+            return Resposta::resposta(
+                'Categorias ativas encontradas com sucesso!',
+                $categorias,
+                200,
+                true
+            );
+        } catch (Exception $e) {
+
+            return Resposta::resposta(
+                'Ocorreu um erro ao tentar-se buscar as categorias ativas da empresa!',
+                null,
+                200,
+                false
+            );
+        }
+
+    }
 }

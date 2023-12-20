@@ -32,4 +32,9 @@ class CategoriaController extends Controller
 
         return $this->categoriaServico->alterarStatusCategoria($requisicao);
     }
+
+    public function buscarCategoriasAtivas($idEmpresa) {
+
+        return $this->categoriaServico->buscarCategoriasAtivas($idEmpresa);
+    }
 }
