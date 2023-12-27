@@ -5,12 +5,13 @@ namespace App\Servico;
 use App\Models\Categoria;
 use App\Models\Empresa;
 use App\Models\Produto;
+use App\Utils\CalculoUtils;
 use App\Utils\Resposta;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use PhpParser\Node\Expr\Cast\Double;
 
 class ProdutoServico implements IServiceProduto
 {
@@ -58,6 +59,10 @@ class ProdutoServico implements IServiceProduto
             ]);
 
             if ($validador->fails()) {
+                Log::warning(
+                    'Ocorreram erros de validação de dados! usuario_id: ' . auth()->user()->id,
+                    $validador->errors()->toArray()
+                );
 
                 return Resposta::resposta(
                     'Ocorreram erros de validação de dados!',
@@ -80,7 +85,7 @@ class ProdutoServico implements IServiceProduto
             if (!empty($requisicao->estoque_maximo) && !empty($requisicao->estoque_minimo)) {
 
                 if ($requisicao->estoque_minimo >= $requisicao->estoque_maximo) {
-
+                    
                     return Resposta::resposta(
                         'O estoque máximo deve ser maior que o estoque mínimo!',
                         null,
@@ -169,12 +174,17 @@ class ProdutoServico implements IServiceProduto
             $produto->foto_produto = $requisicao->foto_produto;
 
             if ($produto->save()) {
+                Log::debug('Produto cadastrado com sucesso! usuario_id: ' . auth()->user()->id, $produto->toArray());
 
                 return Resposta::resposta('Produto cadastrado com sucesso!', Produto::find($produto->id), 201, true);
             }
 
             return Resposta::resposta('Ocorreu um erro ao tentar-se cadastrar o produto!', null, 200, false);
         } catch (Exception $e) {
+            Log::error(
+                'Ocorreu o seguinte erro ao tentar-se cadastrar o produto: ' . $e->getMessage() . ' usuario_id: ' . auth()->user()->id,
+                $requisicao->all()
+            );
 
             return Resposta::resposta('Ocorreu um erro ao tentar-se cadastrar o produto!', null, 200, false);
         }
@@ -208,6 +218,7 @@ class ProdutoServico implements IServiceProduto
 
             $categoriaProduto = $produto->categoria()->get();
             $produto['categoria'] = $categoriaProduto;
+            CalculoUtils::calcularValorDescontoProduto($produto);
 
             return Resposta::resposta(
                 'Produto encontrado com sucesso!',
@@ -216,9 +227,12 @@ class ProdutoServico implements IServiceProduto
                 true
             );
         } catch (Exception $e) {
+            Log::error(
+                'Ocorreu o seguinte erro ao tentar-se buscar o produto pelo id: ' . $e->getMessage() . ' usuario_id: ' . auth()->user()->id
+            );
 
             return Resposta::resposta(
-                'Ocorreu um erro ao tentar-se buscar o produto pelo id!' . $e->getMessage(),
+                'Ocorreu um erro ao tentar-se buscar o produto pelo id!',
                 null,
                 200,
                 false
@@ -239,6 +253,7 @@ class ProdutoServico implements IServiceProduto
             $produtos = $this->obterProdutosAbaixoEstoqueMinimoEmpresa($idEmpresa);
 
             if (count($produtos) > 0) {
+                CalculoUtils::calcularDescontosProdutos($produtos);
 
                 return Resposta::resposta(
                     'Produtos abaixo do estoque mínimo encontrados com sucesso!',
@@ -274,6 +289,7 @@ class ProdutoServico implements IServiceProduto
             'produtos.preco',
             'produtos.qtd_unidades_estoque',
             'produtos.estoque_minimo',
+            'produtos.percentual_desconto',
             'categorias.descricao AS categoria'
         ];
 
@@ -332,21 +348,28 @@ class ProdutoServico implements IServiceProduto
                     'produtos.preco',
                     'produtos.qtd_unidades_estoque',
                     'produtos.status',
+                    'produtos.percentual_desconto',
                     'categorias.descricao AS categoria'
                 )
                 ->where('produtos.categoria_id', $idCategoria)
                 ->get();
             
-            return count($produtos) > 0 ? Resposta::resposta(
-                'Produtos encontrados com sucesso!',
-                $produtos,
-                200,
-                true
-            ) : Resposta::resposta(
+            if (count($produtos) > 0) {
+                CalculoUtils::calcularDescontosProdutos($produtos);
+
+                return Resposta::resposta(
+                    'Produtos encontrados com sucesso!',
+                    $produtos,
+                    200,
+                    true
+                );
+            }
+
+            return Resposta::resposta(
                 'Não existem produtos cadastrados no banco de dados!',
                 [],
                 200,
-                true
+                false
             );
         } catch (Exception $e) {
 
@@ -388,12 +411,17 @@ class ProdutoServico implements IServiceProduto
                     'produtos.preco',
                     'produtos.qtd_unidades_estoque',
                     'produtos.status',
+                    'produtos.percentual_desconto',
                     'categorias.descricao AS categoria'
                 )
                 ->where('produtos.descricao', 'like', '%' . $descricao . '%')
                 ->where('produtos.empresa_id', $requisicao->empresa_id)
                 ->get();
             
+            if (count($produtos) >  0) {
+                CalculoUtils::calcularDescontosProdutos($produtos);
+            }    
+
             return Resposta::resposta(
                 'Foram encontrados os seguintes dados!',
                 $produtos,
@@ -441,6 +469,7 @@ class ProdutoServico implements IServiceProduto
             $produtos = $this->obterProdutosComCategoriaDaEmpresa($idEmpresa);
 
             if (count($produtos) > 0) {
+                CalculoUtils::calcularDescontosProdutos($produtos);
 
                 return Resposta::resposta(
                     'Produtos da empresa encontrados com sucesso!',
@@ -476,7 +505,8 @@ class ProdutoServico implements IServiceProduto
             'produtos.preco',
             'produtos.qtd_unidades_estoque',
             'produtos.empresa_id',
-            'produtos.status'
+            'produtos.status',
+            'produtos.percentual_desconto'
         ];
 
         return DB::table('produtos')

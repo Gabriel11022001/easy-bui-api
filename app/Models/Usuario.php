@@ -31,4 +31,9 @@ class Usuario extends Authenticatable
         'uf',
         'numero'
     ];
+
+    public function clientes() {
+
+        return $this->hasMany(Cliente::class);
+    }
 }

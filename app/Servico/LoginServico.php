@@ -6,6 +6,7 @@ use App\Models\Usuario;
 use App\Utils\Resposta;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class LoginServico
@@ -28,6 +29,7 @@ class LoginServico
             ]);
 
             if ($validador->fails()) {
+                Log::warning('Ocorreram erros de validação de dados!', $validador->errors()->toArray());
 
                 return Resposta::resposta(
                     'Ocorreram erros de validação de dados!',
@@ -43,6 +45,9 @@ class LoginServico
             );
 
             if (!$usuario) {
+                Log::alert('O usuário informou um e-mail ou senha inválido!', [
+                    'email' => $requisicao->email
+                ]);
 
                 return Resposta::resposta(
                     'E-mail ou senha inválidos!',
@@ -58,6 +63,10 @@ class LoginServico
              */
             $this->deletarTodosTokensUsuario($usuario);
             $token = $this->gerarToken($usuario);
+            Log::debug('O usuário realizou o login com sucesso!', [
+                'email' => $requisicao->email,
+                'token' => $token
+            ]);
 
             return Resposta::resposta(
                 'Login efetuado com sucesso!',
@@ -68,7 +77,8 @@ class LoginServico
                 true
             );
         } catch (Exception $e) {
-            
+            Log::error('Ocorreu o seguinte erro ao tentar-se realizar o login: ' . $e->getMessage());
+
             return Resposta::resposta(
                 'Ocorreu um erro ao tentar-se realizar login!' . $e->getMessage(),
                 null,
@@ -109,6 +119,13 @@ class LoginServico
         }
 
         $usuarioAutenticado->tokens()->delete();
+        Log::debug(
+            'O usuário realizou o logout com sucesso!',
+            [
+                'usuario' => $usuarioAutenticado->nome,
+                'email' => $usuarioAutenticado->email
+            ]
+        );
 
         return Resposta::resposta(
             'Logout efetuado com sucesso!',

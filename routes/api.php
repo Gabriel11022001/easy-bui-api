@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CategoriaController;
+use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProdutoController;
@@ -12,6 +13,7 @@ Route::post('/usuario/autenticado', [ LoginController::class, 'obterUsuarioAuten
 
 // mapeando todas as rotas que exigem autenticação
 Route::middleware(['auth:sanctum'])->group(function () {
+    Route::post('/cliente', [ ClienteController::class, 'cadastrarCliente' ]);
     Route::post('/produto', [ ProdutoController::class, 'cadastrarProduto' ]);
     Route::post('/produto/buscar-pela-descricao', [ ProdutoController::class, 'buscarProdutosPelaDescricao' ]);
     Route::post('/empresa', [ EmpresaController::class, 'cadastrarEmpresa' ]);
@@ -25,4 +27,5 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/produto/empresa/abaixo-estoque-minimo/{idEmpresa}', [ ProdutoController::class, 'buscarProdutosAbaixoEstoqueMinimo' ]);
     Route::get('/produto/categoria/{idCategoria}/{idEmpresa}', [ ProdutoController::class, 'buscarProdutosPelaCategoria' ]);
     Route::get('/categoria/buscar-categorias-ativas/{idEmpresa}', [ CategoriaController::class, 'buscarCategoriasAtivas' ]);
+    Route::get('/cliente/{idUsuario}', [ ClienteController::class, 'buscarTodosClientesUsuario' ]);
 });
