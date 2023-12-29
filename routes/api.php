@@ -3,6 +3,7 @@
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\EmpresaController;
+use App\Http\Controllers\FormaPagamentoController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProdutoController;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,7 @@ Route::post('/usuario/autenticado', [ LoginController::class, 'obterUsuarioAuten
 
 // mapeando todas as rotas que exigem autenticação
 Route::middleware(['auth:sanctum'])->group(function () {
+    Route::post('/forma-pagamento', [ FormaPagamentoController::class, 'cadastrarFormaPagamento' ]);
     Route::post('/cliente', [ ClienteController::class, 'cadastrarCliente' ]);
     Route::post('/produto', [ ProdutoController::class, 'cadastrarProduto' ]);
     Route::post('/produto/buscar-pela-descricao', [ ProdutoController::class, 'buscarProdutosPelaDescricao' ]);
@@ -28,4 +30,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/produto/categoria/{idCategoria}/{idEmpresa}', [ ProdutoController::class, 'buscarProdutosPelaCategoria' ]);
     Route::get('/categoria/buscar-categorias-ativas/{idEmpresa}', [ CategoriaController::class, 'buscarCategoriasAtivas' ]);
     Route::get('/cliente/{idUsuario}', [ ClienteController::class, 'buscarTodosClientesUsuario' ]);
+    Route::get('/cliente/buscar-pelo-cpf/{cpf}/{idUsuario}', [ ClienteController::class, 'buscarClientesPeloCpf' ]);
+    Route::get('/forma-pagamento/empresa/{idEmpresa}', [ FormaPagamentoController::class, 'buscarTodasFormasPagamentoEmpresa' ]);
 });

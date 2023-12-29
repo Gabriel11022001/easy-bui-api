@@ -22,4 +22,9 @@ class ClienteController extends Controller
 
         return $this->clienteServico->buscarTodosClientesUsuario($idUsuario);
     }
+
+    public function buscarClientesPeloCpf($cpf, $idUsuario) {
+
+        return $this->clienteServico->buscarClientesPeloCpf($cpf, $idUsuario);
+    }
 }

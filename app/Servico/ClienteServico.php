@@ -272,6 +272,83 @@ class ClienteServico implements IServicoCliente
 
     public function buscarClientesPeloCpf($cpf, $idUsuario) {
         
+        try {
+            $validador = Validator::make([
+                'usuario_id' => $idUsuario,
+                'cpf' => $cpf
+            ],
+            [
+                'usuario_id' => 'required|numeric|min:1',
+                'cpf' => 'required|cpf'
+            ],
+            [
+                'usuario_id.required' => 'Informe o id do usuário!',
+                'usuario_id.numeric' => 'O id do usuário deve ser um valor numérico!',
+                'usuario_id.min' => 'O id do usuário deve ser um valor maior ou igual a 1!',
+                'cpf.required' => 'Informe o cpf do cliente!',
+                'cpf.cpf' => 'Cpf inválido!'
+            ]);
+
+            if ($validador->fails()) {
+                Log::warning(
+                    'Ocorreram erros de validação de dados! usuario_id: ' . auth()->user()->id,
+                    $validador->errors()->toArray()
+                );
+
+                return Resposta::resposta(
+                    'Ocorreram erros de validação de dados!',
+                    $validador->errors(),
+                    200,
+                    false
+                );
+            }
+
+            $usuario = Usuario::find($idUsuario);
+
+            if (!$usuario) {
+
+                return Resposta::resposta(
+                    'Não existe um usuário cadastrado com esse id!',
+                    null,
+                    200,
+                    false
+                );
+            }
+
+            $cliente = Cliente::where('cpf', $cpf)
+                ->where('usuario_id', $idUsuario)
+                ->get()
+                ->first();
+            
+            if (!$cliente) {
+
+                return Resposta::resposta(
+                    'Você não possui um cliente com esse cpf!',
+                    null,
+                    200,
+                    false
+                );
+            }
+            
+            return Resposta::resposta(
+                'Cliente encontrado com sucesso!',
+                $cliente,
+                200,
+                true
+            );
+        } catch (Exception $e) {
+            Log::error(
+                'Ocorreu o seguinte erro ao tentar-se buscar os clientes pelo cpf: ' . $e->getMessage() . ' usuario_id: ' . auth()->user()->id
+            );
+
+            return Resposta::resposta(
+                'Ocorreu um erro ao tentar-se buscar os clientes pelo cpf!',
+                null,
+                200,
+                false
+            );
+        }
+
     }
 
     public function buscarClientesPeloEmail($email, $idUsuario) {
