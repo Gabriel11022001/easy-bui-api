@@ -22,4 +22,9 @@ class FormaPagamentoController extends Controller
 
         return $this->formaPagamentoServico->buscarTodasFormasPagamentoEmpresa($idEmpresa);
     }
+
+    public function buscarTodasFormasPagamentoEmpresaAtivas($idEmpresa) {
+
+        return $this->formaPagamentoServico->buscarTodasFormasPagamentoEmpresaAtivas($idEmpresa);
+    }
 }

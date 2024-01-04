@@ -2,6 +2,8 @@
 
 namespace App\Utils;
 
+use App\Models\Produto;
+
 class CalculoUtils
 {
 
@@ -35,5 +37,24 @@ class CalculoUtils
         }
 
         $produto['preco_com_desconto'] = $precoComDesconto;
+    }
+
+    public static function calcularValorTotalVenda($items) {
+        $valorTotal = 0;
+        $descontoTotal = 0;
+
+        foreach ($items as $item) {
+            $quantidadeUnidades = $item['qtd_unidades'];
+            $produto = Produto::find($item['produto_id']);
+            $precoUnitarioProduto = $produto->preco;
+            $valorTotal += ($quantidadeUnidades * $precoUnitarioProduto);
+            
+            if ($produto->desconto_dinheiro != 0) {
+                $descontoTotal += $quantidadeUnidades * $produto->desconto_dinheiro;
+            }
+
+        }
+
+        return $valorTotal - $descontoTotal;
     }
 }

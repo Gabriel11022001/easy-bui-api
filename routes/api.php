@@ -6,6 +6,7 @@ use App\Http\Controllers\EmpresaController;
 use App\Http\Controllers\FormaPagamentoController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProdutoController;
+use App\Http\Controllers\VendaController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [ LoginController::class, 'login' ]);
@@ -14,6 +15,7 @@ Route::post('/usuario/autenticado', [ LoginController::class, 'obterUsuarioAuten
 
 // mapeando todas as rotas que exigem autenticação
 Route::middleware(['auth:sanctum'])->group(function () {
+    Route::post('/venda', [ VendaController::class, 'realizarVenda' ]);
     Route::post('/forma-pagamento', [ FormaPagamentoController::class, 'cadastrarFormaPagamento' ]);
     Route::post('/cliente', [ ClienteController::class, 'cadastrarCliente' ]);
     Route::post('/produto', [ ProdutoController::class, 'cadastrarProduto' ]);
@@ -32,4 +34,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/cliente/{idUsuario}', [ ClienteController::class, 'buscarTodosClientesUsuario' ]);
     Route::get('/cliente/buscar-pelo-cpf/{cpf}/{idUsuario}', [ ClienteController::class, 'buscarClientesPeloCpf' ]);
     Route::get('/forma-pagamento/empresa/{idEmpresa}', [ FormaPagamentoController::class, 'buscarTodasFormasPagamentoEmpresa' ]);
+    Route::get('/forma-pagamento/empresa/ativo/{idEmpresa}', [ FormaPagamentoController::class, 'buscarTodasFormasPagamentoEmpresaAtivas' ]);
+    Route::get('/venda/{idUsuario}', [ VendaController::class, 'buscarVendasUsuario' ]);
+    Route::get('/venda/buscar-pelo-id/{id}', [ VendaController::class, 'buscarVendaPeloId' ]);
+    Route::get('/venda/cliente/{idUsuario}/{idCliente}', [ VendaController::class, 'buscarVendasCliente' ]);
 });

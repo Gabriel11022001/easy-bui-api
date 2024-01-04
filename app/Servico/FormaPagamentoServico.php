@@ -170,6 +170,61 @@ class FormaPagamentoServico implements IServiceFormaPagamento
 
     public function buscarTodasFormasPagamentoEmpresaAtivas($idEmpresa) {
         
+        try {
+
+            if (empty($idEmpresa)) {
+
+                return Resposta::resposta(
+                    'Informe o id da empresa!',
+                    null,
+                    200,
+                    false
+                );
+            }
+
+            $empresa = Empresa::find($idEmpresa);
+
+            if (!$empresa) {
+
+                return Resposta::resposta(
+                    'Não existe uma empresa cadastrada com esse id!',
+                    null,
+                    200,
+                    false
+                );
+            }
+
+            $formasPagamento = FormaPagamento::where('empresa_id', $idEmpresa)
+                ->where('status', true)
+                ->get();
+
+            if (count($formasPagamento) === 0) {
+
+                return Resposta::resposta(
+                    'A empresa não possui formas de pagamento ativas!',
+                    [],
+                    200,
+                    false
+                );
+            }
+            
+            return Resposta::resposta(
+                'Formas de pagamento ativas encontradas com sucesso!',
+                $formasPagamento,
+                200,
+                true
+            );
+        } catch (Exception $e) {
+            Log::error('Ocorreu o seguinte erro ao tentar-se buscar as formas de pagamento ativas: ' . $e->getMessage() . ' usuarios_id: ' . auth()->user()->id);
+
+            return Resposta::resposta(
+                'Ocorreu um erro ao tentar-se buscar as formas de pagamento ativas!',
+                null,
+                200,
+                false
+            );
+        }
+
     }
 
     public function editarFormaPagamento(Request $requisicao) {
